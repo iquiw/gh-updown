@@ -1,0 +1,42 @@
+name: UpDown
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        msystem: ["MINGW64", "UCRT64"]
+    env:
+      MSYSTEM: ${{ matrix.msystem }}
+
+    steps:
+      - name: Create package
+        run: |
+          touch emacs-tree-sitter-module-$MSYSTEM.zip
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.msystem }}
+          path: |
+            emacs-tree-sitter-module-*.zip
+
+  release:
+    runs-on: ubuntu-latest
+
+    needs: [build]
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          merge-multiple: true
+
+      - name: Display structure of downloaded files
+        run: ls -R
